@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
+    <Version>1.0.0-a1</Version>
+    <Authors>S. Krauter { CleanCoderX, XETH }</Authors>
+    <Company>KST</Company>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Description>IO modules</Description>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <OutputType>Library</OutputType>
+    <PackageId>CCX.IO.Modules</PackageId>
+    <RepositoryUrl>https://github.com/CleanCodeX/IO</RepositoryUrl>
+    <Platforms>AnyCPU</Platforms>
+    <Product>IO Modules</Product>
+    <PackageTags>IO, Extensions, Modules</PackageTags>
+    <PackageProjectUrl>http://libs.softwaretechnik.IT</PackageProjectUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CCX.IO" Version="1.0.0-b2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\IO\IO.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove=".gitignore" />
+  </ItemGroup>
+
+</Project>
