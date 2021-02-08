@@ -5,7 +5,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
-    <Version>1.0.0-a1</Version>
+    <Version>1.0.0-a2</Version>
     <Authors>S. Krauter { CleanCoderX, XETH }</Authors>
     <Company>KST</Company>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -22,7 +22,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CCX.IO" Version="1.0.0-b2" />
+    <PackageReference Include="CCX.IO" Version="1.0.0-b3" />
   </ItemGroup>
 
   <ItemGroup>
