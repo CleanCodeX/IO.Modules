@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Reflection;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using Common.Shared.Min.Extensions;
@@ -27,7 +27,7 @@ namespace IO.Modules.Services
 			var complexMemberPrefix = options.ComplexMemberPrefix;
 			var ident = " ".Repeat(identSize);
 			var isGroupingType = source.GetType().IsDefined<UseMemberGroupingAttribute>();
-			var fieldInfos = source.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
+			var fieldInfos = source.GetType().GetPublicInstanceFields().ToArray();
 			var showTypeNames = options.ShowTypeNames;
 
 			StringBuilder sb = new(fieldInfos.Length * 10);
@@ -99,7 +99,7 @@ namespace IO.Modules.Services
 					
 					var isComplexMember = fieldType.IsDefined<HasComplexMembersAttribute>();
 					var hasToStringOverride = fieldType.IsDefined<HasToStringOverrideAttribute>();
-					var memberFieldCount = fieldType.GetFields().Length;
+					var memberFieldCount = fieldType.GetPublicInstanceFields().Count();
 
 					if (!hasToStringOverride && (isComplexMember || memberFieldCount > 1))
 					{
