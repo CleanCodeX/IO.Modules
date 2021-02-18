@@ -30,7 +30,7 @@ namespace IO.Modules.Services
 				sb = sb.Append(source.GetValue(i)?.ToString() ?? nullValue);
 			}
 
-			return $"{options.Prefix}{sb}{options.Postfix}";
+			return $"{options.Prefix}{sb}{options.Suffix}";
 		}
 	}
 }

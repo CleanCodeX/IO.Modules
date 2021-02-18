@@ -24,7 +24,6 @@ namespace IO.Modules.Services
 			var identSize = options.IdentSize + currentIdentSize;
 			var memberDelimiter = options.MemberDelimiter;
 			var memberPrefix = options.SimpleMemberPrefix;
-			var complexMemberPrefix = options.ComplexMemberPrefix;
 			var ident = " ".Repeat(identSize);
 			var isGroupingType = source.GetType().IsDefined<UseMemberGroupingAttribute>();
 			var fieldInfos = source.GetType().GetPublicInstanceFields().ToArray();
@@ -35,7 +34,7 @@ namespace IO.Modules.Services
 			if (isGroupingType)
 			{
 				ident = string.Empty;
-				sb.AppendLine($"»{source.GetType().GetDisplayName()}«");
+				sb.AppendLine(options.GroupingMemberTemplate.InsertArgs(source.GetType().GetDisplayName()));
 			}
 
 			foreach (var fieldInfo in fieldInfos)
@@ -43,15 +42,15 @@ namespace IO.Modules.Services
 				var fieldType = fieldInfo.FieldType;
 				var value = fieldInfo.GetValue(source)!;
 				var fieldName = fieldInfo.GetDisplayName();
-				var useGrouping = isGroupingType || fieldInfo.IsDefined<UseMemberGroupingAttribute>();
+				var showType = showTypeNames == ShowTypeNamesOption.AllMembers
+				               || (showTypeNames == ShowTypeNamesOption.GroupingMembers) 
+				               && (isGroupingType 
+				                   || fieldInfo.IsDefined<UseMemberGroupingAttribute>());
 
-				//Debug.Assert(fieldName != "Chunk04");
+				//System.Diagnostics.Debug.Assert(fieldInfo.Name != "CharmsAndRareItems");
 
-				if (options.TypeNameTemplate is not null && 
-				    (useGrouping && showTypeNames == ShowTypeNamesOption.GroupingMembers 
-				     || showTypeNames == ShowTypeNamesOption.NonGroupingMembers) && 
-				    !fieldType.IsArray && fieldType.Name != fieldName)
-						fieldName = fieldType.Name.InsertArgs(fieldName);
+				if (options.TypeNameTemplate is not null && !fieldType.IsArray && showType)
+					fieldName = options.TypeNameTemplate.InsertArgs(fieldType.GetDisplayName(), fieldName);
 
 				var size = 0;
 
@@ -79,17 +78,17 @@ namespace IO.Modules.Services
 						foreach (var element in (Array)value)
 						{
 							var complexValue = InternalFormat(element, identSize, options);
-							sb.Append(memberDelimiter + $"{ident} ¬ ({elementSize}) {fieldName}[{i}] {complexValue}");
+							sb.Append(memberDelimiter + $"{ident} {options.ArrayElementPrefix} ({elementSize}) {fieldName}[{i}] {complexValue}");
 							++i;
 						}
 					}
 					else
 					{
 						size = elementSize * length;
-						sb.Append(memberDelimiter + $"{ident} {memberPrefix} ({size}) {fieldName}: ");
+						sb.Append(memberDelimiter + $"{ident} {memberPrefix} ({size}) {fieldName}: {elementType.GetDisplayName()}[] ");
 						sb.Append(elementType.IsPrimitive
-							? $"{elementType.Name}[{length}] {((Array)value).Format().TruncateAt(options.ArrayStringMaxLength)!.Replace("…", options.Ellipsis)}"
-							: $"{elementType.Name}[{length}]");
+							? ((Array)value).Format().TruncateAt(options.ArrayStringMaxLength)!.Replace("…", options.Ellipsis)
+							: "{N/A}");
 
 					}
 				}
@@ -97,26 +96,33 @@ namespace IO.Modules.Services
 				{
 					sb.Append(memberDelimiter);
 					
-					var isComplexMember = fieldType.IsDefined<HasComplexMembersAttribute>();
-					var hasToStringOverride = fieldType.IsDefined<HasToStringOverrideAttribute>();
+					var hasToStringOverride = fieldType.HasOverride(nameof(ToString));
 					var memberFieldCount = fieldType.GetPublicInstanceFields().Count();
 
-					if (!hasToStringOverride && (isComplexMember || memberFieldCount > 1))
+					if (hasToStringOverride)
+						sb.Append($"{ident} {memberPrefix} ({size}) {fieldName}: {value}");
+					else
 					{
 						var complexValue = InternalFormat(value, identSize, options);
-						sb.Append($"{ident} {complexMemberPrefix} ({size}) {fieldName} {complexValue}");
+						sb.Append($"{ident} {options.ComplexMemberPrefix} ({size}) {fieldName} {complexValue}");
 					}
-					else
-						sb.Append($"{ident} {memberPrefix} ({size}) {fieldName}: {value}");
 				}
 				else if (fieldType.IsEnum)
 				{
-					fieldType = fieldType.GetEnumUnderlyingType();
-					size = Marshal.SizeOf(fieldType);
-					var underlyingValue = Convert.ChangeType(value, fieldType);
-					var enumFlags = ((Enum)value).GetSetFlags().Join();
+					var underLyingType = fieldType.GetEnumUnderlyingType();
+					size = Marshal.SizeOf(underLyingType);
+					var underlyingValue = Convert.ChangeType(value, underLyingType).ToString();
 
-					sb.Append(memberDelimiter + $"{ident} {memberPrefix} ({size}) {fieldName} (Enum): {underlyingValue} {{{enumFlags}}}");
+					var enumFlags = fieldType.IsDefined<FlagsAttribute>()
+						? ((Enum) value).GetSetFlags().Join()
+						: value.ToString();
+
+					if (enumFlags != underlyingValue)
+						enumFlags = $"{{{enumFlags}}}";
+					else
+						enumFlags = string.Empty;
+
+					sb.Append(memberDelimiter + $"{ident} {memberPrefix} ({size}) {fieldName}:{options.EnumTypeSuffix.InsertArgs(fieldType.Name)} {underlyingValue} {enumFlags}");
 				}
 				else
 					sb.Append(memberDelimiter + $"{ident} {memberPrefix} ({size}) {fieldName}: {value}");
